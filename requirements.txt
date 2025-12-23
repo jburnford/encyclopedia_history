@@ -1,0 +1,13 @@
+# Core dependencies
+torch>=2.0
+transformers>=4.40
+sentence-transformers>=2.6
+numpy
+pandas
+
+# For Voyage API baseline
+voyageai
+
+# Utilities
+python-dotenv
+tqdm
