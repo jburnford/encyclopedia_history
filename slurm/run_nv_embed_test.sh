@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-jic823
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:nvidia_h100_80gb_hbm3_3g.40gb:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G
 #SBATCH --time=2:00:00
