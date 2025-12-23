@@ -8,7 +8,7 @@
 # Download NV-Embed-v2 model to HuggingFace cache
 # Run once: sbatch slurm/download_model.sh
 
-module load python/3.11
+module load python/3.11 arrow
 
 source ~/projects/def-jic823/embedding_test_venv/bin/activate
 

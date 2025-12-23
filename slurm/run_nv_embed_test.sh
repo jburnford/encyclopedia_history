@@ -9,7 +9,7 @@
 # Run NV-Embed-v2 embedding test on encyclopedia articles
 # Usage: sbatch slurm/run_nv_embed_test.sh
 
-module load python/3.11 cuda/12.6
+module load python/3.11 cuda/12.6 arrow
 
 source ~/projects/def-jic823/embedding_test_venv/bin/activate
 

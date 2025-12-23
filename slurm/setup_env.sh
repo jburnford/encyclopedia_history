@@ -8,7 +8,7 @@
 # Setup virtual environment for embedding tests
 # Run once: sbatch slurm/setup_env.sh
 
-module load python/3.11 cuda/12.6
+module load python/3.11 cuda/12.6 arrow
 
 VENV_DIR=~/projects/def-jic823/embedding_test_venv
 
