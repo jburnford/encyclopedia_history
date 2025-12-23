@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-jic823
-#SBATCH --gres=gpu:nvidia_h100_80gb_hbm3_3g.40gb:1
+#SBATCH --gres=gpu:h100:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G
 #SBATCH --time=2:00:00
@@ -40,7 +40,7 @@ python scripts/test_nv_embed.py \
     --data data/articles_1815_clean.jsonl \
     --output results/nv_embed_with_instruction.json \
     --test-type all \
-    --batch-size 16
+    --batch-size 2
 
 # Run test without instruction (for comparison)
 echo ""
@@ -50,7 +50,7 @@ python scripts/test_nv_embed.py \
     --output results/nv_embed_no_instruction.json \
     --test-type all \
     --no-instruction \
-    --batch-size 16
+    --batch-size 2
 
 echo ""
 echo "=========================================="
