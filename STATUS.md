@@ -2,12 +2,59 @@
 
 **Date**: December 23, 2025
 **Project**: Encyclopedia History Embedding Comparison
+**Status**: ✅ COMPLETED
+
+---
+
+## Executive Summary
+
+**NV-Embed-v2 significantly outperforms voyage-3** for historical encyclopedia retrieval:
+
+| Model | MRR | Recall@5 | Recall@10 |
+|-------|-----|----------|-----------|
+| voyage-3 (baseline) | 0.894 | 0.644 | - |
+| **NV-Embed-v2 (no instruction)** | **0.961** | **1.000** | **1.000** |
+| NV-Embed-v2 (with instruction) | 0.934 | 1.000 | 1.000 |
+
+**Key Finding**: The historical instruction prompt slightly *reduced* performance (0.934 vs 0.961). The model's pretrained knowledge was sufficient without explicit guidance.
+
+**Semantic Drift**: Perfect 1.000 MRR on all semantic drift queries (PHLOGISTON, BROADCAST, ATOM, ENTHUSIASM, PHYSICS).
 
 ---
 
 ## Objective
 
 Compare **NV-Embed-v2** (instruction-tuned, #1 MTEB) against **voyage-3** (API) for historical encyclopedia retrieval, testing whether instruction-tuning helps with semantic drift in 1815 text.
+
+---
+
+## Final Results
+
+### Overall Performance
+
+| Model | MRR | Recall@5 | Recall@10 | Improvement |
+|-------|-----|----------|-----------|-------------|
+| voyage-3 | 0.894 | 0.644 | - | baseline |
+| NV-Embed-v2 (no instruction) | 0.961 | 1.000 | 1.000 | **+7.5% MRR** |
+| NV-Embed-v2 (with instruction) | 0.934 | 1.000 | 1.000 | +4.5% MRR |
+
+### By Query Type
+
+| Query Type | NV-Embed-v2 (no inst.) | NV-Embed-v2 (with inst.) |
+|------------|------------------------|--------------------------|
+| Leather/Tanning | 0.950 | 0.900 |
+| Semantic Drift | 1.000 | 1.000 |
+| Long Articles | 0.938 | 0.938 |
+
+### Semantic Drift Queries (Perfect Performance)
+
+| Query | Expected | Rank | MRR |
+|-------|----------|------|-----|
+| "combustion burning fire theory" | PHLOGISTON | 1 | 1.000 |
+| "scattering seeds sowing field" | BROADCAST | 1 | 1.000 |
+| "indivisible matter particle philosophy" | ATOM | 1 | 1.000 |
+| "religious fervor divine inspiration" | ENTHUSIASM | 1 | 1.000 |
+| "natural philosophy motion mechanics" | PHYSICS | 1 | 1.000 |
 
 ---
 
@@ -22,15 +69,13 @@ Compare **NV-Embed-v2** (instruction-tuned, #1 MTEB) against **voyage-3** (API) 
 
 ---
 
-## Current Test: NV-Embed-v2
-
-### Why NV-Embed-v2?
+## Why NV-Embed-v2?
 
 - **#1 on MTEB** (72.31 overall, 62.65 retrieval)
 - **Instruction-tuned**: Can provide historical context prompt
 - **CC-BY-NC-4.0**: Non-commercial use (our project qualifies)
 
-### Historical Instruction Prompt
+### Historical Instruction Prompt (Tested)
 
 ```
 Given a query about 18th-century knowledge from the 1815 Encyclopaedia Britannica,
@@ -38,6 +83,8 @@ retrieve relevant passages. Note that historical terminology may differ from mod
 usage - for example, 'phlogiston' was the accepted theory of combustion, 'physics'
 often meant medicine, and 'broadcast' meant scattering seeds.
 ```
+
+**Result**: Instruction did not improve results; model's pretrained knowledge sufficient.
 
 ---
 
@@ -60,7 +107,7 @@ often meant medicine, and 'broadcast' meant scattering seeds.
 
 ---
 
-## Issues Encountered
+## Issues Encountered & Resolved
 
 ### 1. transformers Version Incompatibility
 **Error**: `AttributeError: 'DynamicCache' object has no attribute 'get_usable_length'`
@@ -87,9 +134,9 @@ pip install datasets
 |-----------|------|--------|
 | 2g.20gb | 20GB | OOM on model load |
 | 3g.40gb | 40GB | OOM during inference (batch_size=16) |
-| h100 (full) | 80GB | Testing now (batch_size=2) |
+| h100 (full) | 80GB | ✅ Success (batch_size=2) |
 
-**Current fix**: Request full H100 + reduce batch_size to 2
+**Solution**: Request full H100 + reduce batch_size to 2
 
 ---
 
@@ -97,12 +144,12 @@ pip install datasets
 
 | Job ID | GPU | Batch Size | Status | Notes |
 |--------|-----|------------|--------|-------|
-| 6178185 | CPU | - | Completed | venv setup |
-| 6178332 | CPU | - | Failed | Model download (missing datasets) |
-| 6180928 | CPU | - | Failed | Model download (transformers error) |
-| 6184104 | 2g.20gb | 16 | OOM | 20GB insufficient |
-| 6184721 | 3g.40gb | 16 | OOM | 40GB insufficient with batch=16 |
-| **6189921** | **h100** | **2** | **Running** | Full 80GB, batch=2 |
+| 6178185 | CPU | - | ✅ Completed | venv setup |
+| 6178332 | CPU | - | ❌ Failed | Model download (missing datasets) |
+| 6180928 | CPU | - | ❌ Failed | Model download (transformers error) |
+| 6184104 | 2g.20gb | 16 | ❌ OOM | 20GB insufficient |
+| 6184721 | 3g.40gb | 16 | ❌ OOM | 40GB insufficient with batch=16 |
+| **6189921** | **h100** | **2** | **✅ Completed** | Full 80GB, batch=2 |
 
 ---
 
@@ -114,9 +161,11 @@ pip install datasets
 - "morocco red leather Turkey dyeing"
 
 ### Semantic Drift (5 queries)
-- "combustion burning fire theory" → expects PHLOGISTON
-- "scattering seeds sowing field" → expects BROADCAST
-- "indivisible matter particle philosophy" → expects ATOM
+- "combustion burning fire theory" → expects PHLOGISTON ✅
+- "scattering seeds sowing field" → expects BROADCAST ✅
+- "indivisible matter particle philosophy" → expects ATOM ✅
+- "religious fervor divine inspiration" → expects ENTHUSIASM ✅
+- "natural philosophy motion mechanics" → expects PHYSICS ✅
 
 ### Long Articles (4 queries)
 - "vitrification of materials" → expects GLASS
@@ -124,24 +173,30 @@ pip install datasets
 
 ---
 
-## Expected Results
+## Conclusions & Recommendations
 
-| Metric | voyage-3 | NV-Embed-v2 Target |
-|--------|----------|-------------------|
-| MRR (overall) | 0.894 | > 0.90 |
-| MRR (semantic drift) | TBD | > 0.80 |
-| Recall@5 | 0.644 | > 0.70 |
+### 1. Use NV-Embed-v2 for Production
+- **+7.5% MRR improvement** over voyage-3
+- **100% Recall@5** vs 64.4% for voyage-3
+- Perfect semantic drift handling
 
-**Hypothesis**: Instruction-tuning should help NV-Embed-v2 outperform voyage-3 on semantic drift queries.
+### 2. Skip Instruction Prompts
+- Instruction prompt slightly hurt performance
+- Model's pretrained historical knowledge sufficient
+- Simpler deployment without custom prompts
 
----
+### 3. Hardware Requirements
+- **Minimum**: 80GB VRAM (full H100)
+- **Batch size**: 2 (conservative for large chunks)
+- **Alternative**: stella_en_1.5B_v5 for smaller GPUs
 
-## Next Steps
+### 4. Cost Comparison
+| Model | Type | Cost/1M tokens |
+|-------|------|----------------|
+| voyage-3 | API | ~$0.06 |
+| NV-Embed-v2 | Self-hosted | H100 compute only |
 
-1. **Wait for job 6189921** to complete
-2. **Analyze results** - compare with/without instruction
-3. **If OOM persists**: Try stella_en_1.5B_v5 (MIT license, 1.5B params, ~6GB)
-4. **Document findings** in final report
+For large-scale processing (18K+ articles), self-hosted is more cost-effective.
 
 ---
 
@@ -164,7 +219,8 @@ encyclopedia_history/
 │   ├── download_model.sh        # Model download
 │   └── run_nv_embed_test.sh     # Test job
 └── results/
-    └── .gitkeep
+    ├── nv_embed_with_instruction.json
+    └── nv_embed_no_instruction.json
 ```
 
 ---
@@ -183,4 +239,84 @@ ssh nibi "cd ~/projects/def-jic823/encyclopedia_history && sbatch slurm/run_nv_e
 
 # Check GPU memory
 ssh nibi "nvidia-smi"
+```
+
+---
+
+## Phase 2: Two-Stage Retrieval with Reranking
+
+### Target Architecture
+
+```
+Query → [NV-Embed-v2] → Top-50 → [BGE-Reranker-v2.5] → Top-5 → [GPT-OSS-120B]
+         Fast Retrieval         Precise Reranking        Generation
+         (~0.5ms/query)         (~50ms/query)
+```
+
+### Models
+
+| Stage | Model | Parameters | VRAM | Purpose |
+|-------|-------|------------|------|---------|
+| Retrieval | NV-Embed-v2 | 7B | ~40GB | Fast bi-encoder, MTEB #1 |
+| Reranking | BGE-Reranker-v2.5-gemma2 | 9B | ~40GB | Cross-encoder precision |
+| Generation | GPT-OSS-120B | 120B | - | Already on Nibi |
+
+### Why Two-Stage?
+
+1. **Bi-encoder (NV-Embed-v2)**: Embeds query and documents separately. Fast but less precise.
+2. **Cross-encoder (BGE-Reranker)**: Looks at query+document pairs together. Slower but more accurate.
+
+For semantic drift queries, the reranker can catch subtle contextual clues the bi-encoder misses.
+
+### Test Script
+
+```bash
+# Submit reranker test (full power, H100 80GB)
+ssh nibi "cd ~/projects/def-jic823/encyclopedia_history && sbatch slurm/run_reranker_test.sh"
+```
+
+### Expected Results
+
+| Configuration | MRR | Notes |
+|---------------|-----|-------|
+| NV-Embed-v2 only | 0.961 | Current baseline |
+| + BGE-Reranker (full) | >0.97? | Hypothesis: reranking helps |
+| + BGE-Reranker (8 layers) | ~0.96? | Speed vs accuracy tradeoff |
+
+---
+
+## Phase 3: Neo4j Knowledge Graph + RAG
+
+### Architecture
+
+```
+encyclopedia_history/
+├── Neo4j Graph Database
+│   ├── EB_Article nodes (headword, edition_year)
+│   ├── EB_Chunk nodes (text, embedding, section)
+│   ├── Vector index for similarity search
+│   └── Future: NER entities + relationships
+│
+├── Retrieval Pipeline
+│   ├── voyage-3 embeddings (stored in Neo4j)
+│   ├── Vector similarity search
+│   └── BGE-Reranker for precision
+│
+└── Generation
+    └── GPT-OSS-120B (on Nibi)
+```
+
+### Files Created
+
+- `scripts/embed_and_load_neo4j.py` - Embedding + Neo4j loader
+- `scripts/search_encyclopedia.py` - Interactive search
+- `scripts/test_bge_reranker.py` - Reranker evaluation
+- `slurm/run_reranker_test.sh` - SLURM job for reranker
+
+### Neo4j Connection
+
+```
+URI: bolt://206.12.90.118:7687
+User: neo4j
+Pass: hl;kn258*vcA7492
 ```
