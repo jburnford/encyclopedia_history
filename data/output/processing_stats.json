@@ -1,0 +1,89 @@
+{
+  "timestamp": "2025-12-23T20:36:01.774338",
+  "editions": [
+    {
+      "edition_year": 1771,
+      "edition_name": "Britannica 1st",
+      "total_articles": 13762,
+      "treatises_found": 0,
+      "treatises_processed": 0,
+      "total_sections": 0,
+      "total_chunks": 0,
+      "total_chars": 0,
+      "processing_time_seconds": 0,
+      "errors": []
+    },
+    {
+      "edition_year": 1778,
+      "edition_name": "Britannica 2nd",
+      "total_articles": 12881,
+      "treatises_found": 636,
+      "treatises_processed": 625,
+      "total_sections": 2827,
+      "total_chunks": 5642,
+      "total_chars": 11512657,
+      "processing_time_seconds": 3597.191924571991,
+      "errors": []
+    },
+    {
+      "edition_year": 1797,
+      "edition_name": "Britannica 3rd",
+      "total_articles": 13541,
+      "treatises_found": 0,
+      "treatises_processed": 0,
+      "total_sections": 0,
+      "total_chunks": 0,
+      "total_chars": 0,
+      "processing_time_seconds": 0,
+      "errors": []
+    },
+    {
+      "edition_year": 1815,
+      "edition_name": "Britannica 5th",
+      "total_articles": 18172,
+      "treatises_found": 0,
+      "treatises_processed": 0,
+      "total_sections": 0,
+      "total_chunks": 0,
+      "total_chars": 0,
+      "processing_time_seconds": 0,
+      "errors": []
+    },
+    {
+      "edition_year": 1823,
+      "edition_name": "Britannica 6th",
+      "total_articles": 18497,
+      "treatises_found": 1134,
+      "treatises_processed": 1089,
+      "total_sections": 5125,
+      "total_chunks": 13064,
+      "total_chars": 24115621,
+      "processing_time_seconds": 6990.78661775589,
+      "errors": []
+    },
+    {
+      "edition_year": 1842,
+      "edition_name": "Britannica 7th",
+      "total_articles": 18917,
+      "treatises_found": 1220,
+      "treatises_processed": 1205,
+      "total_sections": 6239,
+      "total_chunks": 16522,
+      "total_chars": 35201520,
+      "processing_time_seconds": 8398.043857097626,
+      "errors": []
+    },
+    {
+      "edition_year": 1860,
+      "edition_name": "Britannica 8th",
+      "total_articles": 16630,
+      "treatises_found": 1299,
+      "treatises_processed": 1280,
+      "total_sections": 6558,
+      "total_chunks": 16650,
+      "total_chars": 34787747,
+      "processing_time_seconds": 9010.326607227325,
+      "errors": []
+    }
+  ]
+}
