@@ -3,10 +3,12 @@
 #SBATCH --gres=gpu:h100:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=4:00:00
+#SBATCH --time=8:00:00
 #SBATCH --job-name=embed_encyclopedias
 
 # Embed all encyclopedia editions with NV-Embed-v2
+#
+# This script automatically processes all chunks_*.jsonl files in data/
 #
 # Prerequisites:
 # 1. Copy chunk files to Nibi:
@@ -16,10 +18,11 @@
 # 2. Submit job:
 #    cd ~/projects/def-jic823/encyclopedia_history && sbatch slurm/embed_all_editions.sh
 #
-# Estimates:
-# - 1778 edition: ~5,600 chunks → ~45 minutes
-# - 1823 edition: ~12,000 chunks → ~90 minutes
-# - Total: ~2.5 hours (4 hour limit for safety)
+# Timing estimates (~2 chunks/sec on H100):
+# - 1771 (1st): ~3,000 chunks → ~25 minutes
+# - 1778 (2nd): ~5,600 chunks → ~45 minutes
+# - 1823 (6th): ~12,000 chunks → ~100 minutes
+# - 1842 (7th): ~15,000 chunks → ~125 minutes (estimate)
 
 module load python/3.11 cuda/12.6 arrow
 
@@ -44,71 +47,76 @@ echo ""
 # Create embeddings directory if needed
 mkdir -p embeddings
 
-# Check for data files
-echo "Checking data files..."
-if [ ! -f "data/chunks_1778.jsonl" ]; then
-    echo "ERROR: data/chunks_1778.jsonl not found!"
-    echo "Run: scp /home/jic823/1815EncyclopediaBritannicaNLS/output/chunks_*.jsonl nibi:~/projects/def-jic823/encyclopedia_history/data/"
+# Find all chunk files
+CHUNK_FILES=$(ls data/chunks_*.jsonl 2>/dev/null | sort)
+
+if [ -z "$CHUNK_FILES" ]; then
+    echo "ERROR: No chunk files found in data/"
+    echo "Run: scp chunks_*.jsonl nibi:~/projects/def-jic823/encyclopedia_history/data/"
     exit 1
 fi
 
-if [ ! -f "data/chunks_1823.jsonl" ]; then
-    echo "WARNING: data/chunks_1823.jsonl not found (optional)"
-fi
-
-echo ""
-echo "=== Embedding 1778 Edition (2nd) ==="
-echo "Input: data/chunks_1778.jsonl"
-echo "Output: embeddings/embeddings_1778.json"
+echo "Found chunk files:"
+for f in $CHUNK_FILES; do
+    wc -l "$f" | awk '{print "  " $2 ": " $1 " chunks"}'
+done
 echo ""
 
-START_1778=$(date +%s)
-python scripts/embed_chunks_nv.py \
-    --input data/chunks_1778.jsonl \
-    --output embeddings/embeddings_1778.json \
-    --batch-size 2
+# Track overall progress
+TOTAL_START=$(date +%s)
+SUCCESS_COUNT=0
+FAIL_COUNT=0
 
-if [ $? -eq 0 ]; then
-    END_1778=$(date +%s)
-    ELAPSED_1778=$((END_1778 - START_1778))
-    echo "1778 edition completed in ${ELAPSED_1778}s"
-else
-    echo "ERROR: 1778 embedding failed!"
-    exit 1
-fi
+# Process each edition
+for CHUNK_FILE in $CHUNK_FILES; do
+    # Extract year from filename (chunks_1778.jsonl -> 1778)
+    YEAR=$(basename "$CHUNK_FILE" | sed 's/chunks_\([0-9]*\)\.jsonl/\1/')
+    OUTPUT_FILE="embeddings/embeddings_${YEAR}.json"
 
-echo ""
-
-# Only embed 1823 if file exists
-if [ -f "data/chunks_1823.jsonl" ]; then
-    echo "=== Embedding 1823 Edition (6th) ==="
-    echo "Input: data/chunks_1823.jsonl"
-    echo "Output: embeddings/embeddings_1823.json"
+    echo "=========================================="
+    echo "=== Embedding $YEAR Edition ==="
+    echo "=========================================="
+    echo "Input:  $CHUNK_FILE"
+    echo "Output: $OUTPUT_FILE"
     echo ""
 
-    START_1823=$(date +%s)
+    # Skip if already processed
+    if [ -f "$OUTPUT_FILE" ]; then
+        echo "SKIP: $OUTPUT_FILE already exists"
+        echo ""
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+        continue
+    fi
+
+    START_TIME=$(date +%s)
     python scripts/embed_chunks_nv.py \
-        --input data/chunks_1823.jsonl \
-        --output embeddings/embeddings_1823.json \
+        --input "$CHUNK_FILE" \
+        --output "$OUTPUT_FILE" \
         --batch-size 2
 
     if [ $? -eq 0 ]; then
-        END_1823=$(date +%s)
-        ELAPSED_1823=$((END_1823 - START_1823))
-        echo "1823 edition completed in ${ELAPSED_1823}s"
+        END_TIME=$(date +%s)
+        ELAPSED=$((END_TIME - START_TIME))
+        echo ""
+        echo "$YEAR edition completed in ${ELAPSED}s"
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
     else
-        echo "ERROR: 1823 embedding failed!"
-        exit 1
+        echo ""
+        echo "ERROR: $YEAR embedding failed!"
+        FAIL_COUNT=$((FAIL_COUNT + 1))
     fi
-else
-    echo "Skipping 1823 edition (file not found)"
-fi
+    echo ""
+done
 
-echo ""
+TOTAL_END=$(date +%s)
+TOTAL_ELAPSED=$((TOTAL_END - TOTAL_START))
+
 echo "=========================================="
 echo "EMBEDDING PIPELINE COMPLETE"
 echo "=========================================="
 echo "End time: $(date)"
+echo "Total time: ${TOTAL_ELAPSED}s ($((TOTAL_ELAPSED / 60)) minutes)"
+echo "Success: $SUCCESS_COUNT, Failed: $FAIL_COUNT"
 echo ""
 echo "Output files:"
 ls -lh embeddings/embeddings_*.json 2>/dev/null || echo "  (no embedding files found)"
@@ -117,6 +125,6 @@ echo "Next steps:"
 echo "1. Copy embeddings to local:"
 echo "   scp nibi:~/projects/def-jic823/encyclopedia_history/embeddings/*.json ./embeddings/"
 echo ""
-echo "2. Load to Neo4j:"
-echo "   python scripts/load_neo4j.py --chunks data/chunks_1778.jsonl --embeddings embeddings/embeddings_1778.json"
+echo "2. Load to Neo4j (for each edition):"
+echo "   python scripts/load_neo4j.py --chunks data/chunks_YEAR.jsonl --embeddings embeddings/embeddings_YEAR.json"
 echo "=========================================="
